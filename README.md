@@ -1,2 +1,1 @@
-# identity-access-domain
-Identity &amp; Access Domain
+# Identity &amp; Access Domain
