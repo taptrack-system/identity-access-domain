@@ -1,5 +1,7 @@
 package com.identityaccessdomain.userservice.service;
 
+import com.identityaccessdomain.userservice.dto.UserRequestDTO;
+import com.identityaccessdomain.userservice.dto.UserResponseDTO;
 import com.identityaccessdomain.userservice.model.User;
 
 import java.util.List;
@@ -13,8 +15,16 @@ import java.util.Optional;
  */
 public interface UserService {
 
-  List<User> findAllUsers();
+  List<UserResponseDTO> findAllUsers();
 
-  Optional<User> findUserById(Long id);
+  Optional<UserResponseDTO> findUserById(Long id);
+
+  UserResponseDTO createUser(UserRequestDTO requestDTO);
+
+  Optional<UserResponseDTO> updateUser(Long id, UserRequestDTO requestDTO);
+
+  Optional<UserResponseDTO> partialUpdateUser(Long id, UserRequestDTO requestDTO);
+
+  boolean deleteUser(Long id);
 
 }
