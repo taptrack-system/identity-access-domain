@@ -28,12 +28,22 @@ public class UserController {
 
   @GetMapping
   public ResponseEntity<List<User>> listUsers() {
+    log.info("Listando todos os usuários");
     return ResponseEntity.ok(userService.findAllUsers());
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<User> getById(@PathVariable Long id) {
-    return userService.findUserById(id).map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    log.info("Buscando usuário com ID {}", id);
+    return userService.findUserById(id)
+      .map(user -> {
+        log.debug("Usuário encontrado: {}", user);
+        return ResponseEntity.ok(user);
+      })
+      .orElseGet(() -> {
+        log.warn("Usuário com ID {} não encontrado", id);
+        return ResponseEntity.notFound().build();
+      });
   }
 
 }
