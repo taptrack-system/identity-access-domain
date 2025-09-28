@@ -1,0 +1,42 @@
+# application.yml
+# --- Configuration ---
+#
+server:
+  port: ${APP_PORT:8081}
+  servlet:
+    context-path: /api/v1/users
+
+spring:
+  application:
+    name: user-service
+  # Profile ativo por default (local)
+  profiles:
+    active: local
+
+# --- Actuator ---
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,loggers,env
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: ALWAYS
+
+# --- Logging ---
+logging:
+  level:
+    root: INFO
+    org.springframework.cloud.gateway: DEBUG
+    com.identityaccessdomain.userservice: DEBUG
+    org.springframework.cache: DEBUG
+
+# --- Info ---
+info:
+  app:
+    name: ${spring.application.name}
+    description: User Service do sistema TapTrack
+    version: 0.0.1-SNAPSHOT
+    maintainer: Juliane Maran
+    contact: julianemaran@gmail.com
