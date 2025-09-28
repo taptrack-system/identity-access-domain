@@ -1,8 +1,9 @@
-package com.identityaccessdomain.userservice.controller;
+package com.identityaccessdomain.userservice.api.rest;
 
-import com.identityaccessdomain.userservice.dto.UserRequestDTO;
-import com.identityaccessdomain.userservice.dto.UserResponseDTO;
-import com.identityaccessdomain.userservice.service.UserService;
+import com.identityaccessdomain.userservice.application.command.UserCommandService;
+import com.identityaccessdomain.userservice.application.query.UserQueryService;
+import com.identityaccessdomain.userservice.api.dto.UserRequestDTO;
+import com.identityaccessdomain.userservice.api.dto.UserResponseDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,20 +24,21 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserController {
 
-  private final UserService userService;
+  private final UserQueryService userQueryService;
+  private final UserCommandService userCommandService;
 
   // Listar todos os usuários
   @GetMapping
   public ResponseEntity<List<UserResponseDTO>> listUsers() {
     log.info("Listando todos os usuários");
-    return ResponseEntity.ok(userService.findAllUsers());
+    return ResponseEntity.ok(userQueryService.findAll());
   }
 
   // Buscar usuário por ID
   @GetMapping("/{id}")
   public ResponseEntity<UserResponseDTO> getById(@PathVariable Long id) {
     log.info("Buscando usuário com ID {}", id);
-    return userService.findUserById(id)
+    return userQueryService.findById(id)
       .map(ResponseEntity::ok)
       .orElseGet(() -> {
         log.warn("Usuário com ID {} não encontrado", id);
@@ -48,7 +50,7 @@ public class UserController {
   @PostMapping
   public ResponseEntity<UserResponseDTO> createUser(@Valid @RequestBody UserRequestDTO requestDTO) {
     log.info("Criando usuário");
-    UserResponseDTO createdUser = userService.createUser(requestDTO);
+    UserResponseDTO createdUser = userCommandService.create(requestDTO);
     return ResponseEntity.status(201).body(createdUser);
   }
 
@@ -57,7 +59,7 @@ public class UserController {
   public ResponseEntity<UserResponseDTO> updateUser(@PathVariable Long id,
                                                     @Valid @RequestBody UserRequestDTO requestDTO) {
     log.info("Atualizando usuário ID {}", id);
-    return userService.updateUser(id, requestDTO)
+    return userCommandService.update(id, requestDTO)
       .map(ResponseEntity::ok)
       .orElseGet(() -> {
         log.warn("Usuário com ID {} não encontrado para atualização", id);
@@ -70,7 +72,7 @@ public class UserController {
   public ResponseEntity<UserResponseDTO> partialUpdateUser(@PathVariable Long id,
                                                            @RequestBody UserRequestDTO requestDTO) {
     log.info("Atualização parcial do usuário ID {}", id);
-    return userService.partialUpdateUser(id, requestDTO)
+    return userCommandService.partialUpdate(id, requestDTO)
       .map(ResponseEntity::ok)
       .orElseGet(() -> {
         log.warn("Usuário com ID {} não encontrado para atualização parcial", id);
@@ -82,7 +84,7 @@ public class UserController {
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
     log.info("Deletando usuário ID {}", id);
-    boolean deleted = userService.deleteUser(id);
+    boolean deleted = userCommandService.delete(id);
     return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
   }
 

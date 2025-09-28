@@ -1,4 +1,4 @@
-package com.identityaccessdomain.userservice.exception.dto;
+package com.identityaccessdomain.userservice.api.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 

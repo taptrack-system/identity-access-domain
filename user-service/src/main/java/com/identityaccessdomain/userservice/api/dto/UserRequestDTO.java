@@ -1,4 +1,4 @@
-package com.identityaccessdomain.userservice.dto;
+package com.identityaccessdomain.userservice.api.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

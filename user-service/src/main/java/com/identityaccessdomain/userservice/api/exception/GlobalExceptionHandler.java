@@ -1,6 +1,6 @@
-package com.identityaccessdomain.userservice.exception;
+package com.identityaccessdomain.userservice.api.exception;
 
-import com.identityaccessdomain.userservice.exception.dto.ApiErrorResponse;
+import com.identityaccessdomain.userservice.api.dto.ApiErrorResponse;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
