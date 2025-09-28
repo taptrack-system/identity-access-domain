@@ -94,3 +94,36 @@ from
 where
     u1_0.id=?    
 ```
+
+## Como Executar
+
+### Executar Local (H2 Database)
+
+```bash
+spring-boot:run --spring.profiles.active=local --env-file .env.local
+```
+
+### Executar em Produção (PostgreSQL Database)
+
+```bash
+java -jar user-service.jar --spring.profiles.active=prod --env-file .env
+```
+
+---
+
+## Executando no IntelliJ
+
+Utilizando Variáveis de Ambiente carregadas direto na configuração de execução do IntelliJ (
+`Run > Edit Configurations... > Environment variables`):
+
+### Application Local (H2 Database)
+
+```
+SPRING_PROFILES_ACTIVE=local;APP_PORT=8081;DB_URL=jdbc:h2:mem:usersdb;DB_DRIVER=org.h2.Driver;DB_USER=sa;DB_PASSWORD=
+```
+
+### Application Produção (PostgreSQL Database)
+
+```
+SPRING_PROFILES_ACTIVE=prod;APP_PORT=8081;DB_HOST=localhost;DB_PORT=5432;DB_NAME=usersdb;DB_USER=admin;DB_PASSWORD=secret123
+```
