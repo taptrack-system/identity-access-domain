@@ -2,7 +2,8 @@
 *.class
 
 # Environment variables
-!**/**/.env
+.env
+.env.local
 
 # Log file
 *.log
