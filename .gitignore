@@ -23,8 +23,8 @@
 hs_err_pid*
 replay_pid*
 
-# Variáveis de Ambiente
+# Environment variables
 .env
 .env.local
-./user-service/.env
-./user-service/.env.local
+!**/.env
+!**/.env.local
