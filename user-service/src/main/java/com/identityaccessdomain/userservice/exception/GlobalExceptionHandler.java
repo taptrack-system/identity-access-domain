@@ -41,7 +41,7 @@ public class GlobalExceptionHandler {
     );
   }
 
-  // 400 - Erro de validação
+  // 400 - Validation Errors
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<ApiErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex,
                                                                      HttpServletRequest request) {
@@ -55,7 +55,7 @@ public class GlobalExceptionHandler {
       .body(buildError(HttpStatus.BAD_REQUEST, "Erro de validação nos campos", request.getRequestURI(), errors));
   }
 
-  // 400 - Violação de constraints (ex.: @NotBlank em Services)
+  // 400 - Constraint Violation (ex.: @NotBlank em Services)
   @ExceptionHandler(ConstraintViolationException.class)
   public ResponseEntity<ApiErrorResponse> handleConstraintViolation(ConstraintViolationException ex,
                                                                     HttpServletRequest request) {
@@ -63,7 +63,7 @@ public class GlobalExceptionHandler {
       .body(buildError(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getRequestURI(), null));
   }
 
-  // 404 - Entidade não encontrada
+  // 404 - Entity Not Found
   @ExceptionHandler(EntityNotFoundException.class)
   public ResponseEntity<ApiErrorResponse> handleNotFound(EntityNotFoundException ex,
                                                          HttpServletRequest request) {
@@ -71,7 +71,7 @@ public class GlobalExceptionHandler {
       .body(buildError(HttpStatus.NOT_FOUND, ex.getMessage(), request.getRequestURI(), null));
   }
 
-  // 405 - Método HTTP inválido
+  // 405 - HTTP Request Method Not Allowed
   @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
   public ResponseEntity<ApiErrorResponse> handleMethodNotAllowed(HttpRequestMethodNotSupportedException ex,
                                                                  HttpServletRequest request) {
@@ -96,7 +96,7 @@ public class GlobalExceptionHandler {
       .body(buildError(HttpStatus.CONFLICT, "Violação de integridade de dados", request.getRequestURI(), null));
   }
 
-  // 500 - Erros inesperados
+  // 500 - General Exception
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ApiErrorResponse> handleGeneral(Exception ex, HttpServletRequest request) {
     log.error("Erro inesperado", ex);
