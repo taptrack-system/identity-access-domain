@@ -2,6 +2,7 @@
 # --- Prod Configuration ---
 #
 spring:
+  # MySQL Database Configuration
   datasource:
     url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -15,6 +16,18 @@ spring:
       hibernate:
         format_sql: false
         dialect: org.hibernate.dialect.MySQL8Dialect
+  # Elasticsearch Configuration
+  elasticsearch:
+    uris: ${ELASTIC_HOST:localhost}:${ELASTIC_PORT:9200}
+#    username: ${ELASTIC_USER:elastic}
+#    password: ${ELASTIC_PASSWORD:changeme}
+
+#  data:
+#    elasticsearch:
+#      client:
+#        endpoints: ${ELASTIC_HOST:localhost}:${ELASTIC_PORT:9200}
+#      repositories:
+#        enabled: true
 
 # Ajustes de logging específicos para produção
 logging:

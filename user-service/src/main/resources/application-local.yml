@@ -19,6 +19,8 @@ spring:
     console:
       enabled: true
       path: /h2-console
+  elasticsearch:
+    uris: localhost:9200
 
 logging:
   level:
