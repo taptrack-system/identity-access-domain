@@ -2,7 +2,7 @@
 *.class
 
 # Environment variables
-./.env
+!**/user-service/.env
 
 # Log file
 *.log
