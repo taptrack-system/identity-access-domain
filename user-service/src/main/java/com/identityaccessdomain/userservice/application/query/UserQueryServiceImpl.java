@@ -2,6 +2,7 @@ package com.identityaccessdomain.userservice.application.query;
 
 import com.identityaccessdomain.userservice.api.dto.UserResponseDTO;
 import com.identityaccessdomain.userservice.application.mapping.UserMapper;
+import com.identityaccessdomain.userservice.domain.user.exception.UserNotFoundException;
 import com.identityaccessdomain.userservice.infra.search.UserSearchRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +38,13 @@ public class UserQueryServiceImpl implements UserQueryService {
   @Override
   public Optional<UserResponseDTO> findById(Long id) {
     log.info("Buscando usuário ID {} no Elasticsearch", id);
-    return searchRepository.findById(id).map(userMapper::documentToResponseDto);
+    // Modificado para lançar UserNotFoundException se o usuário não for encontrado
+    return searchRepository.findById(id)
+      .map(userMapper::documentToResponseDto)
+      .or(() -> { // Usamos .or() para manter o contrato do Optional na interface, mas lançar a exceção
+        log.warn("Usuário com ID {} não encontrado no Elasticsearch.", id);
+        throw new UserNotFoundException("Usuário com ID " + id + " não encontrado.");
+      });
   }
 
 }

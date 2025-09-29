@@ -18,7 +18,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "users")
+@Table(name = "users_tb")
 public class User {
 
   @Id
@@ -34,7 +34,6 @@ public class User {
   @Size(min = 3, max = 50, message = "O sobrenome deve ter entre {min} e {max} caracteres.")
   @Column(name = "last_name", nullable = false, length = 150)
   private String lastName;
-
 
   @NotBlank(message = "O e-mail é obrigatório.")
   @Email(message = "O e-mail deve ser válido.")

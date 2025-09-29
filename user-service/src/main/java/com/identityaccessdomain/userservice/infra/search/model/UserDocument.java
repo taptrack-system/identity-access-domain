@@ -19,7 +19,7 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(indexName = "users")
+@Document(indexName = "users_docs")
 public class UserDocument {
 
   @Id

@@ -1,12 +1,14 @@
 package com.identityaccessdomain.userservice.api.rest;
 
-import com.identityaccessdomain.userservice.application.command.UserCommandService;
-import com.identityaccessdomain.userservice.application.query.UserQueryService;
 import com.identityaccessdomain.userservice.api.dto.UserRequestDTO;
 import com.identityaccessdomain.userservice.api.dto.UserResponseDTO;
+import com.identityaccessdomain.userservice.application.command.UserCommandService;
+import com.identityaccessdomain.userservice.application.query.UserQueryService;
+import com.identityaccessdomain.userservice.domain.user.exception.UserNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,65 +29,68 @@ public class UserController {
   private final UserQueryService userQueryService;
   private final UserCommandService userCommandService;
 
-  // Listar todos os usuários
   @GetMapping
   public ResponseEntity<List<UserResponseDTO>> listUsers() {
-    log.info("Listando todos os usuários");
-    return ResponseEntity.ok(userQueryService.findAll());
+    log.info("Recebida requisição para listar todos os usuários.");
+    List<UserResponseDTO> users = userQueryService.findAll();
+    return ResponseEntity.ok(users);
   }
 
-  // Buscar usuário por ID
   @GetMapping("/{id}")
   public ResponseEntity<UserResponseDTO> getById(@PathVariable Long id) {
-    log.info("Buscando usuário com ID {}", id);
-    return userQueryService.findById(id)
-      .map(ResponseEntity::ok)
-      .orElseGet(() -> {
-        log.warn("Usuário com ID {} não encontrado", id);
-        return ResponseEntity.notFound().build();
+    log.info("Recebida requisição para buscar usuário com ID {}", id);
+    // O service agora lança UserNotFoundException se não encontrar
+    UserResponseDTO user = userQueryService.findById(id)
+      .orElseThrow(() -> { // Este orElseThrow é apenas para satisfazer o retorno de UserResponseDTO
+        log.error("Erro inesperado: findById retornou Optional.empty mas deveria ter lançado exceção.");
+        return new UserNotFoundException("Usuário com ID " + id + " não encontrado.");
       });
+    return ResponseEntity.ok(user);
   }
 
-  // Criar novo usuário
   @PostMapping
   public ResponseEntity<UserResponseDTO> createUser(@Valid @RequestBody UserRequestDTO requestDTO) {
-    log.info("Criando usuário");
+    log.info("Recebida requisição para criar usuário: {}", requestDTO.email());
     UserResponseDTO createdUser = userCommandService.create(requestDTO);
-    return ResponseEntity.status(201).body(createdUser);
+    return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
   }
 
-  // Atualizar usuário existente
   @PutMapping("/{id}")
   public ResponseEntity<UserResponseDTO> updateUser(@PathVariable Long id,
                                                     @Valid @RequestBody UserRequestDTO requestDTO) {
-    log.info("Atualizando usuário ID {}", id);
-    return userCommandService.update(id, requestDTO)
-      .map(ResponseEntity::ok)
-      .orElseGet(() -> {
-        log.warn("Usuário com ID {} não encontrado para atualização", id);
-        return ResponseEntity.notFound().build();
+    log.info("Recebida requisição para atualizar usuário ID {}", id);
+    // O service agora lança UserNotFoundException ou EmailAlreadyExistsException se necessário
+    UserResponseDTO updatedUser = userCommandService.update(id, requestDTO)
+      .orElseThrow(() -> {
+        log.error("Erro inesperado: update retornou Optional.empty mas deveria ter lançado exceção.");
+        return new UserNotFoundException("Usuário com ID " + id + " não encontrado para atualização.");
       });
+    return ResponseEntity.ok(updatedUser);
   }
 
-  // Atualização parcial do usuário
   @PatchMapping("/{id}")
   public ResponseEntity<UserResponseDTO> partialUpdateUser(@PathVariable Long id,
                                                            @RequestBody UserRequestDTO requestDTO) {
-    log.info("Atualização parcial do usuário ID {}", id);
-    return userCommandService.partialUpdate(id, requestDTO)
-      .map(ResponseEntity::ok)
-      .orElseGet(() -> {
-        log.warn("Usuário com ID {} não encontrado para atualização parcial", id);
-        return ResponseEntity.notFound().build();
+    log.info("Recebida requisição para atualização parcial do usuário ID {}", id);
+    // O service agora lança UserNotFoundException ou EmailAlreadyExistsException se necessário
+    UserResponseDTO partialUpdatedUser = userCommandService.partialUpdate(id, requestDTO)
+      .orElseThrow(() -> {
+        log.error("Erro inesperado: partialUpdate retornou Optional.empty mas deveria ter lançado exceção.");
+        return new UserNotFoundException("Usuário com ID " + id + " não encontrado para atualização parcial.");
       });
+    return ResponseEntity.ok(partialUpdatedUser);
   }
 
-  // Deletar usuário
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-    log.info("Deletando usuário ID {}", id);
-    boolean deleted = userCommandService.delete(id);
-    return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+    log.info("Recebida requisição para deletar usuário ID {}", id);
+    // O service agora lança UserNotFoundException se não encontrar
+    userCommandService.delete(id);
+    // Se a deleção falhar e não lançar exceção (o que não deveria acontecer com o código atual),
+    // isso seria um caso de lógica de negócio inesperada.
+    // Como o delete() no service lança exceção para not found, 'deleted' será sempre true aqui
+    // se o usuário for encontrado.
+    return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
   }
 
 }

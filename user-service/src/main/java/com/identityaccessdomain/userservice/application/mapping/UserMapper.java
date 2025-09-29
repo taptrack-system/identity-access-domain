@@ -1,13 +1,10 @@
 package com.identityaccessdomain.userservice.application.mapping;
 
-import com.identityaccessdomain.userservice.domain.user.model.User;
 import com.identityaccessdomain.userservice.api.dto.UserRequestDTO;
 import com.identityaccessdomain.userservice.api.dto.UserResponseDTO;
+import com.identityaccessdomain.userservice.domain.user.model.User;
 import com.identityaccessdomain.userservice.infra.search.model.UserDocument;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingConstants;
-import org.mapstruct.ReportingPolicy;
+import org.mapstruct.*;
 
 /**
  * user-service
@@ -28,5 +25,11 @@ public interface UserMapper {
   UserDocument entityToDocument(User user);
 
   UserResponseDTO documentToResponseDto(UserDocument document);
+
+  @Mapping(target = "id", ignore = true)
+  @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    // Isso ignora campos nulos no DTO
+  void updateEntityFromDto(UserRequestDTO dto, @MappingTarget User entity);
+
 
 }

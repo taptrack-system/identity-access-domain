@@ -31,7 +31,6 @@ public class UserCommandServiceImpl implements UserCommandService {
 
   private final UserMapper userMapper;
   private final UserRepository userRepository;
-
   private final ApplicationEventPublisher eventPublisher;
 
   @Override
@@ -56,24 +55,27 @@ public class UserCommandServiceImpl implements UserCommandService {
   @Override
   @Transactional
   public Optional<UserResponseDTO> update(Long id, UserRequestDTO dto) {
-    log.info("Iniciando atualização do usuário ID {}", id);
+    log.info("Iniciando atualização completa do usuário ID {}", id);
 
-    User existing = userRepository.findById(id)
-      .orElseThrow(() -> new UserNotFoundException("Usuário com ID " + id + " não encontrado."));
+    User existingUser = userRepository.findById(id)
+      .orElseThrow(() -> {
+        log.warn("Falha na atualização: Usuário com ID {} não encontrado.", id);
+        return new UserNotFoundException("Usuário com ID " + id + " não encontrado para atualização.");
+      });
 
-    if (!existing.getEmail().equals(dto.email()) && userRepository.existsByEmail(dto.email())) {
-      log.warn("Falha na atualização: e-mail {} já cadastrado", dto.email());
+    if (!existingUser.getEmail().equals(dto.email()) && userRepository.existsByEmail(dto.email())) {
+      log.warn("Falha na atualização: O novo e-mail {} já está cadastrado para outro usuário.", dto.email());
       throw new EmailAlreadyExistsException("O e-mail " + dto.email() + " já está cadastrado.");
     }
 
-    User updated = userMapper.requestDtoToEntity(dto);
-    updated.setId(existing.getId());
-    User saved = userRepository.save(updated);
+    userMapper.updateEntityFromDto(dto, existingUser);
 
-    log.info("Usuário ID {} atualizado com sucesso", saved.getId());
-    eventPublisher.publishEvent(new UserUpdatedEvent(this, saved.getId()));
+    User updatedUser = userRepository.save(existingUser);
 
-    return Optional.of(userMapper.entityToResponseDto(saved));
+    log.info("Usuário ID {} atualizado com sucesso.", updatedUser.getId());
+    eventPublisher.publishEvent(new UserUpdatedEvent(this, updatedUser.getId()));
+
+    return Optional.of(userMapper.entityToResponseDto(updatedUser));
   }
 
   @Override
@@ -84,14 +86,11 @@ public class UserCommandServiceImpl implements UserCommandService {
     User existing = userRepository.findById(id)
       .orElseThrow(() -> new UserNotFoundException("Usuário com ID " + id + " não encontrado."));
 
-    if (dto.firstName() != null) existing.setFirstName(dto.firstName());
-    if (dto.lastName() != null) existing.setLastName(dto.lastName());
-    if (dto.email() != null) {
-      if (!existing.getEmail().equals(dto.email()) && userRepository.existsByEmail(dto.email())) {
-        log.warn("Falha na atualização parcial: e-mail {} já cadastrado", dto.email());
-        throw new EmailAlreadyExistsException("O e-mail " + dto.email() + " já está cadastrado.");
-      }
-      existing.setEmail(dto.email());
+    userMapper.updateEntityFromDto(dto, existing);
+
+    if (dto.email() != null && !existing.getEmail().equals(dto.email()) && userRepository.existsByEmail(dto.email())) {
+      log.warn("Falha na atualização parcial: e-mail {} já cadastrado", dto.email());
+      throw new EmailAlreadyExistsException("O e-mail " + dto.email() + " já está cadastrado.");
     }
 
     User saved = userRepository.save(existing);
@@ -109,11 +108,9 @@ public class UserCommandServiceImpl implements UserCommandService {
 
     User existing = userRepository.findById(id)
       .orElseThrow(() -> new UserNotFoundException("Usuário com ID " + id + " não encontrado."));
-
     userRepository.delete(existing);
     log.info("Usuário ID {} deletado com sucesso", id);
     eventPublisher.publishEvent(new UserDeletedEvent(this, id));
-
     return true;
   }
 
