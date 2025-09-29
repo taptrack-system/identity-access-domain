@@ -1,7 +1,7 @@
 package com.identityaccessdomain.userservice.bootstrap;
 
-import com.identityaccessdomain.userservice.model.User;
-import com.identityaccessdomain.userservice.repository.UserRepository;
+import com.identityaccessdomain.userservice.domain.user.model.User;
+import com.identityaccessdomain.userservice.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
