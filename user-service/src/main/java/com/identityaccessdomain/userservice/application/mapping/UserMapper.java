@@ -26,10 +26,15 @@ public interface UserMapper {
 
   UserResponseDTO documentToResponseDto(UserDocument document);
 
-  @Mapping(target = "id", ignore = true)
+  /**
+   * Atualiza uma entidade User existente com base nos dados de um UserRequestDTO.
+   * Campos nulos no DTO são ignorados, permitindo atualizações parciais.
+   *
+   * @param dto  O DTO contendo os dados para atualização.
+   * @param user A entidade User a ser atualizada.
+   */
   @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    // Isso ignora campos nulos no DTO
-  void updateEntityFromDto(UserRequestDTO dto, @MappingTarget User entity);
+  void updateEntityFromDto(UserRequestDTO dto, @MappingTarget User user);
 
 
 }
