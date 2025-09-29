@@ -3,13 +3,13 @@ package com.identityaccessdomain.userservice.application.query;
 import com.identityaccessdomain.userservice.api.dto.UserResponseDTO;
 import com.identityaccessdomain.userservice.application.mapping.UserMapper;
 import com.identityaccessdomain.userservice.domain.user.exception.UserNotFoundException;
+import com.identityaccessdomain.userservice.domain.user.service.UserValidationHelper;
 import com.identityaccessdomain.userservice.infra.search.UserSearchRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -25,26 +25,30 @@ import java.util.stream.StreamSupport;
 public class UserQueryServiceImpl implements UserQueryService {
 
   private final UserMapper userMapper;
+  private final UserValidationHelper validationHelper;
   private final UserSearchRepository searchRepository;
 
   @Override
   public List<UserResponseDTO> findAll() {
-    log.info("Buscando todos os usuários no Elasticsearch");
+    log.debug("Buscando todos os usuários no Elasticsearch.");
     return StreamSupport.stream(searchRepository.findAll().spliterator(), false)
       .map(userMapper::documentToResponseDto)
       .collect(Collectors.toList());
   }
 
   @Override
-  public Optional<UserResponseDTO> findById(Long id) {
-    log.info("Buscando usuário ID {} no Elasticsearch", id);
-    // Modificado para lançar UserNotFoundException se o usuário não for encontrado
+  public UserResponseDTO findById(Long id) {
+    log.debug("Buscando usuário ID {} no Elasticsearch.", id);
     return searchRepository.findById(id)
       .map(userMapper::documentToResponseDto)
-      .or(() -> { // Usamos .or() para manter o contrato do Optional na interface, mas lançar a exceção
-        log.warn("Usuário com ID {} não encontrado no Elasticsearch.", id);
-        throw new UserNotFoundException("Usuário com ID " + id + " não encontrado.");
+      .orElseThrow(() -> {
+        log.warn("Usuário com ID {} não encontrado no Elasticsearch (Query Service).", id);
+        return new UserNotFoundException("Usuário com ID " + id + " não encontrado.");
       });
+    // Alternativamente, se o UserValidationHelper for para o banco de escrita,
+    // o Query Service deveria ter sua própria forma de tratar o "não encontrado".
+    // No contexto do CQRS, o query service é responsável por sua própria fonte de dados (Elasticsearch).
+    // Então, lançar a exceção diretamente aqui é apropriado.
   }
 
 }
