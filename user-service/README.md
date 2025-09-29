@@ -90,32 +90,19 @@ As variáveis de ambiente são configuradas no arquivo `.env` (para produção) 
 
 ## Executando a Aplicação
 
-### Via IntelliJ IDEA
+### Via Docker
 
-1. Vá em **Run > Edit Configurations...**
-2. Adicione em **Environment variables**:
-   ```
-   SPRING_PROFILES_ACTIVE=local
-   APP_PORT=8081
-   ```
-3. Roda a classe principal: `com.identityaccessdomain.userservice.UserServiceApplication`
-
-### Via Docker Compose
-
-1. Certifique-se de ter o Docker e Docker Compose instalados.
-2. Execute o comando:
-    ```bash
-    docker-compose --env-file .env up --build
-    ```
-
-### Via Docker Compose utilizando WSL2 no Windows
-
-1. Abra o terminal do WSL2.
-2. Navegue até o diretório do projeto.
-3. Execute o comando:
-    ```bash
-    docker compose --env-file .env.local up --build
-    ```
+1. Certifique-se de que o projeto está compilado: `./mvnw clean package -DskipTests`
+2. Crie o `docker-compose.yml` no mesmo diretório do seu `pom.xml` e `Dockerfile`.
+3. Executar o Docker Compose: `docker compose up --build -d`
+    - `--build`: Garante que a imagem do `user-service` seja reconstruída se houver alterações no `Dockerfile` ou no
+      código.
+    - `-d`: Executa os contêineres em segundo plano (_detached mode_).
+4. Verificar o status: `docker compose ps`
+5. Verificar os logs: `docker compose logs -f user-service`
+6. Parar e remover:
+    - Contêineres e volumes (dados persistentes permanecem por padrão): `docker compose down`
+    - Tudo, incluindo volumes (dados serão perdidos): `docker compose down --volumes`
 
 ---
 
@@ -191,6 +178,59 @@ mvn clean test
     * Leitura (queries) `UserQueryService` (Elasticsearch).
 * **Indexação**: `UserIndexListener` para manter o Elasticsearch sincronizado com alterações no MySQL.
 * **Resiliência**: Tratamento global de exceções com `GlobalExceptionHandler`.
+
+---
+
+## Diagrama de Fluxo
+
+Apresenta o fluxo de operações, tratamento de exceções e eventos de domínio no User Service.
+
+* Controller recebendo requisições HTTP.
+* Serviços de comando (command) e consulta (query) separados.
+* Exceções de negócio e técnicas tratadas globalmente.
+* Publicação de eventos de domínio após operações de escrita.
+* Indexação no Elasticsearch via listener.
+
+```mermaid
+flowchart TD
+    A[UserController] -->|Requisição HTTP| B[UserCommandService / UserQueryService]
+%% Comando
+    B -->|create/update/partialUpdate/delete| C[UserRepository]
+    C --> D[Banco de Dados]
+%% Eventos de domínio
+    C -->|Após commit| E[Eventos de domínio<br>UserCreatedEvent, UserUpdatedEvent, UserDeletedEvent]
+    E --> F[UserIndexingListener]
+    F -->|indexUser| G[UserSearchRepository<br>Elasticsearch]
+%% Exceções de negócio
+    B -->|Falha| H[UserNotFoundException / EmailAlreadyExistsException]
+    H --> I[GlobalExceptionHandler]
+    I -->|Resposta JSON + log em português| A
+%% Exceções técnicas
+    B -->|Falha técnica| J[DataIntegrityViolationException / ConstraintViolationException / Timeout / etc.]
+    J --> I
+%% Query
+    B -->|findAll/findById| G
+%% Logs
+    B --> K[Logs em português]
+    C --> K
+    F --> K
+    H --> K
+    J --> K
+```
+
+### Descrição do Fluxo
+
+1. **Controller** recebe a requisição e chama os serviços de comando ou query.
+2. **Serviços de comando** manipulam dados no `UserRepository` (Banco de Dados).
+3. Após operações de sucesso, eventos de domínio são publicados: `UserCreatedEvent`, `UserUpdatedEvent`,
+   `UserDeletedEvent`.
+4. `UserIndexingListener` recebe os eventos e atualiza o **Elasticsearch**.
+5. **Exceções de negócio** (`UserNotFoundException`, `EmailAlreadyExistsException`) ou técnicas são tratadas pelo *
+   *GlobalExceptionHandler**, retornando JSON padronizado e logs em português.
+6. Todos os passos imortantes geram **logs em português** para auditoria.
+
+"Quero que gere uma versão “mais visual e colorida”, destacando: Domínios específicos em azul, Infra (DB/Elasticsearch)
+em verde e Exceções em vermelho"
 
 ---
 
