@@ -6,10 +6,9 @@ import com.identityaccessdomain.userservice.application.mapping.UserMapper;
 import com.identityaccessdomain.userservice.domain.user.events.UserCreatedEvent;
 import com.identityaccessdomain.userservice.domain.user.events.UserDeletedEvent;
 import com.identityaccessdomain.userservice.domain.user.events.UserUpdatedEvent;
-import com.identityaccessdomain.userservice.domain.user.exception.EmailAlreadyExistsException;
-import com.identityaccessdomain.userservice.domain.user.exception.UserNotFoundException;
 import com.identityaccessdomain.userservice.domain.user.model.User;
 import com.identityaccessdomain.userservice.domain.user.repository.UserRepository;
+import com.identityaccessdomain.userservice.domain.user.service.UserValidationHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -31,17 +30,15 @@ public class UserCommandServiceImpl implements UserCommandService {
 
   private final UserMapper userMapper;
   private final UserRepository userRepository;
+  private final UserValidationHelper validationHelper;
   private final ApplicationEventPublisher eventPublisher;
 
   @Override
   @Transactional
   public UserResponseDTO create(UserRequestDTO dto) {
-    log.info("Iniciando criação de usuário com e-mail: {}", dto.email());
+    log.debug("Criando usuário com e-mail: {}", dto.email());
 
-    if (userRepository.existsByEmail(dto.email())) {
-      log.warn("Falha na criação: e-mail {} já cadastrado", dto.email());
-      throw new EmailAlreadyExistsException("O e-mail " + dto.email() + " já está cadastrado.");
-    }
+    validationHelper.validateEmailAvailability(dto.email(), null); // Valida e-mail para novo usuário
 
     User entity = userMapper.requestDtoToEntity(dto);
     User saved = userRepository.save(entity);
@@ -55,63 +52,53 @@ public class UserCommandServiceImpl implements UserCommandService {
   @Override
   @Transactional
   public Optional<UserResponseDTO> update(Long id, UserRequestDTO dto) {
-    log.info("Iniciando atualização completa do usuário ID {}", id);
+    log.debug("Atualizando usuário ID {}", id);
 
-    User existingUser = userRepository.findById(id)
-      .orElseThrow(() -> {
-        log.warn("Falha na atualização: Usuário com ID {} não encontrado.", id);
-        return new UserNotFoundException("Usuário com ID " + id + " não encontrado para atualização.");
-      });
+    User existingUser = validationHelper.findUserByIdOrThrow(id); // Busca ou lança exceção
 
-    if (!existingUser.getEmail().equals(dto.email()) && userRepository.existsByEmail(dto.email())) {
-      log.warn("Falha na atualização: O novo e-mail {} já está cadastrado para outro usuário.", dto.email());
-      throw new EmailAlreadyExistsException("O e-mail " + dto.email() + " já está cadastrado.");
-    }
+    validationHelper.validateEmailAvailability(dto.email(), id); // Valida e-mail para atualização
 
-    userMapper.updateEntityFromDto(dto, existingUser);
-
+    userMapper.updateEntityFromDto(dto, existingUser); // Atualiza os campos do DTO na entidade
     User updatedUser = userRepository.save(existingUser);
 
     log.info("Usuário ID {} atualizado com sucesso.", updatedUser.getId());
     eventPublisher.publishEvent(new UserUpdatedEvent(this, updatedUser.getId()));
 
-    return Optional.of(userMapper.entityToResponseDto(updatedUser));
+    return Optional.ofNullable(userMapper.entityToResponseDto(updatedUser));
   }
 
   @Override
   @Transactional
   public Optional<UserResponseDTO> partialUpdate(Long id, UserRequestDTO dto) {
-    log.info("Iniciando atualização parcial do usuário ID {}", id);
+    log.debug("Atualização parcial do usuário ID {}", id);
 
-    User existing = userRepository.findById(id)
-      .orElseThrow(() -> new UserNotFoundException("Usuário com ID " + id + " não encontrado."));
+    User existing = validationHelper.findUserByIdOrThrow(id); // Busca ou lança exceção
 
-    userMapper.updateEntityFromDto(dto, existing);
-
-    if (dto.email() != null && !existing.getEmail().equals(dto.email()) && userRepository.existsByEmail(dto.email())) {
-      log.warn("Falha na atualização parcial: e-mail {} já cadastrado", dto.email());
-      throw new EmailAlreadyExistsException("O e-mail " + dto.email() + " já está cadastrado.");
+    // O MapStruct pode ser configurado para ignorar nulos, mas uma verificação explícita
+    // antes da validação do e-mail é mais segura para evitar checar e-mail nulo no helper
+    if (dto.email() != null) {
+      validationHelper.validateEmailAvailability(dto.email(), id);
     }
 
+    userMapper.updateEntityFromDto(dto, existing); // Atualiza os campos não nulos do DTO na entidade
     User saved = userRepository.save(existing);
 
     log.info("Atualização parcial concluída para usuário ID {}", saved.getId());
     eventPublisher.publishEvent(new UserUpdatedEvent(this, saved.getId()));
 
-    return Optional.of(userMapper.entityToResponseDto(saved));
+    return Optional.ofNullable(userMapper.entityToResponseDto(saved));
   }
 
   @Override
   @Transactional
-  public boolean delete(Long id) {
-    log.info("Tentativa de exclusão do usuário ID {}", id);
+  public void delete(Long id) {
+    log.debug("Deletando usuário ID {}", id);
 
-    User existing = userRepository.findById(id)
-      .orElseThrow(() -> new UserNotFoundException("Usuário com ID " + id + " não encontrado."));
+    User existing = validationHelper.findUserByIdOrThrow(id); // Busca ou lança exceção
     userRepository.delete(existing);
+
     log.info("Usuário ID {} deletado com sucesso", id);
     eventPublisher.publishEvent(new UserDeletedEvent(this, id));
-    return true;
   }
 
 }

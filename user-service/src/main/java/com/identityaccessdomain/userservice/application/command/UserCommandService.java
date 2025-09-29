@@ -21,6 +21,6 @@ public interface UserCommandService {
 
   Optional<UserResponseDTO> partialUpdate(Long id, UserRequestDTO dto);
 
-  boolean delete(Long id);
+  void delete(Long id);
 
 }
