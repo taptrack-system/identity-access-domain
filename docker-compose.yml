@@ -69,10 +69,14 @@ services:
         condition: service_healthy # Garante que o Elasticsearch esteja saudável antes de iniciar
     networks:
       - app-network
-
+      - shared-microservices-network # Conecte a rede externa
+      
 networks:
   app-network:
     driver: bridge
+  # Adicione a rede externa
+  shared-microservices-network:
+    external: true
 
 volumes:
   elasticsearch-data: # Volume para persistir dados do Elasticsearch

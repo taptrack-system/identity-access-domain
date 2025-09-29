@@ -4,11 +4,10 @@
 spring:
   # MySQL Database Configuration
   datasource:
-    #    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-    url: jdbc:mysql://localhost:3306/userdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     driver-class-name: com.mysql.cj.jdbc.Driver
-    username: admin # ${DB_USER}
-    password: root123 # ${DB_PASSWORD}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: update
@@ -19,10 +18,7 @@ spring:
         dialect: org.hibernate.dialect.MySQL8Dialect
   # Elasticsearch Configuration
   elasticsearch:
-    # ${ELASTIC_HOST:localhost}:${ELASTIC_PORT:9200}
-    uris: localhost:9200
-#  autoconfigure:
-#    exclude: org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchDataAutoConfiguration
+    uris: ${ELASTIC_HOST:localhost}:${ELASTIC_PORT:9200}
 
 logging:
   level:
