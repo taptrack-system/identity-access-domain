@@ -1,34 +1,79 @@
-#version: "3.9"
+version: '3.8'
 
 services:
+  # 1. Serviço Elasticsearch
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.18.0 # Use uma versão compatível com Spring Boot 3.x
+    container_name: elasticsearch
+    environment:
+      - xpack.security.enabled=false # Desabilita segurança para desenvolvimento (pode ser configurado para true em prod)
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m # Ajuste conforme a necessidade de memória
+    ports:
+      - "9200:9200" # Porta para HTTP REST API
+      - "9300:9300" # Porta para comunicação entre nós (interna)
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data # Persistência de dados do ES
+    networks:
+      - app-network
+    healthcheck: # Verifica se o ES está pronto para aceitar conexões
+      test: [ "CMD-SHELL", "curl -f http://localhost:9200 || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s # Dá um tempo maior para o ES iniciar
+
+  # 2. Serviço MySQL
+  mysql:
+    image: mysql:8.0 # Versão estável do MySQL
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root123 # Senha do root (use variáveis de ambiente em produção!)
+      MYSQL_DATABASE: userdb      # Nome do banco de dados para a aplicação
+      MYSQL_USER: admin           # Usuário da aplicação
+      MYSQL_PASSWORD: root123     # Senha do usuário da aplicação
+    ports:
+      - "3306:3306" # Porta para acessar o MySQL de fora do container (ex: Workbench)
+    volumes:
+      - mysql-data:/var/lib/mysql # Persistência de dados do MySQL
+    networks:
+      - app-network
+    healthcheck: # Verifica se o MySQL está pronto
+      test: [ "CMD-SHELL", "mysqladmin ping -h localhost -u$${MYSQL_USER} -p$${MYSQL_PASSWORD}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # 3. Serviço da Aplicação User Service
   user-service:
     build:
       context: ./user-service
       dockerfile: Dockerfile
-    container_name: user-service-prod
-    env_file:
-      - .env
+    container_name: user-service
     ports:
-      - "${APP_PORT}:${APP_PORT}"
+      - "8081:8081" # Porta da aplicação Spring Boot
     environment:
-      SPRING_PROFILES_ACTIVE: prod
+      SPRING_PROFILES_ACTIVE: prod # Garante que o application-prod.yml seja usado
+      # Configurações de conexão para o MySQL dentro do Docker Compose
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/userdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: root123
+      # Configurações de conexão para o Elasticsearch dentro do Docker Compose
+      SPRING_ELASTICSEARCH_URIS: http://elasticsearch:9200
+      APP_PORT: 8081 # Define a porta para o Dockerfile (EXPOSE ${APP_PORT})
     depends_on:
-      - mysql-prod
-    command: sh -c "java $JAVA_OPTS -jar app.jar"
+      mysql:
+        condition: service_healthy # Garante que o MySQL esteja saudável antes de iniciar
+      elasticsearch:
+        condition: service_healthy # Garante que o Elasticsearch esteja saudável antes de iniciar
+    networks:
+      - app-network
 
-  mysql-prod:
-    image: mysql:8
-    container_name: mysql-prod
-    restart: always
-    environment:
-      MYSQL_DATABASE: ${DB_NAME}
-      MYSQL_USER: ${DB_USER}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-    ports:
-      - "${DB_PORT}:3306"
-    volumes:
-      - mysql_prod_data:/var/lib/mysql
+networks:
+  app-network:
+    driver: bridge
 
 volumes:
-  mysql_prod_data:
+  elasticsearch-data: # Volume para persistir dados do Elasticsearch
+  mysql-data:         # Volume para persistir dados do MySQL
