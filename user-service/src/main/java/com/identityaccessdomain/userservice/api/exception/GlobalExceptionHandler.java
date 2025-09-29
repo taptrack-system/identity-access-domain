@@ -1,6 +1,8 @@
 package com.identityaccessdomain.userservice.api.exception;
 
 import com.identityaccessdomain.userservice.api.dto.ApiErrorResponse;
+import com.identityaccessdomain.userservice.domain.user.exception.EmailAlreadyExistsException;
+import com.identityaccessdomain.userservice.domain.user.exception.UserNotFoundException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
@@ -51,58 +53,78 @@ public class GlobalExceptionHandler {
       String message = error.getDefaultMessage();
       errors.put(fieldName, message);
     });
+    log.warn("Erro de validação nos campos: {}", errors);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
       .body(buildError(HttpStatus.BAD_REQUEST, "Erro de validação nos campos", request.getRequestURI(), errors));
   }
 
-  // 400 - Constraint Violation (ex.: @NotBlank em Services)
   @ExceptionHandler(ConstraintViolationException.class)
   public ResponseEntity<ApiErrorResponse> handleConstraintViolation(ConstraintViolationException ex,
                                                                     HttpServletRequest request) {
+    log.warn("Violação de restrição: {}", ex.getMessage());
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
       .body(buildError(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getRequestURI(), null));
   }
 
-  // 404 - Entity Not Found
-  @ExceptionHandler(EntityNotFoundException.class)
-  public ResponseEntity<ApiErrorResponse> handleNotFound(EntityNotFoundException ex,
-                                                         HttpServletRequest request) {
+  // Exceções de domínio
+  @ExceptionHandler(UserNotFoundException.class)
+  public ResponseEntity<ApiErrorResponse> handleUserNotFound(UserNotFoundException ex,
+                                                             HttpServletRequest request) {
+    log.warn("Usuário não encontrado: {}", ex.getMessage());
     return ResponseEntity.status(HttpStatus.NOT_FOUND)
       .body(buildError(HttpStatus.NOT_FOUND, ex.getMessage(), request.getRequestURI(), null));
   }
 
-  // 405 - HTTP Request Method Not Allowed
+  @ExceptionHandler(EmailAlreadyExistsException.class)
+  public ResponseEntity<ApiErrorResponse> handleEmailExists(EmailAlreadyExistsException ex,
+                                                            HttpServletRequest request) {
+    log.warn("E-mail já cadastrado: {}", ex.getMessage());
+    return ResponseEntity.status(HttpStatus.CONFLICT)
+      .body(buildError(HttpStatus.CONFLICT, ex.getMessage(), request.getRequestURI(), null));
+  }
+
+  // JPA EntityNotFound
+  @ExceptionHandler(EntityNotFoundException.class)
+  public ResponseEntity<ApiErrorResponse> handleNotFound(EntityNotFoundException ex,
+                                                         HttpServletRequest request) {
+    log.warn("Entidade não encontrada: {}", ex.getMessage());
+    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+      .body(buildError(HttpStatus.NOT_FOUND, ex.getMessage(), request.getRequestURI(), null));
+  }
+
+  // Método HTTP não permitido
   @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
   public ResponseEntity<ApiErrorResponse> handleMethodNotAllowed(HttpRequestMethodNotSupportedException ex,
                                                                  HttpServletRequest request) {
+    log.warn("Método HTTP não permitido: {}", ex.getMethod());
     return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
-      .body(buildError(HttpStatus.METHOD_NOT_ALLOWED, "Método HTTP não permitido",
-        request.getRequestURI(), null));
+      .body(buildError(HttpStatus.METHOD_NOT_ALLOWED, "Método HTTP não permitido", request.getRequestURI(), null));
   }
 
-  // 408 - Timeout
+  // Timeout
   @ExceptionHandler(SocketTimeoutException.class)
-  public ResponseEntity<ApiErrorResponse> handleTimeout(SocketTimeoutException ex, HttpServletRequest request) {
+  public ResponseEntity<ApiErrorResponse> handleTimeout(SocketTimeoutException ex,
+                                                        HttpServletRequest request) {
+    log.warn("Tempo de requisição excedido: {}", ex.getMessage());
     return ResponseEntity.status(HttpStatus.REQUEST_TIMEOUT)
-      .body(buildError(HttpStatus.REQUEST_TIMEOUT, "Tempo de requisição excedido",
-        request.getRequestURI(), null));
+      .body(buildError(HttpStatus.REQUEST_TIMEOUT, "Tempo de requisição excedido", request.getRequestURI(), null));
   }
 
-  // 409 - Conflito (ex.: email duplicado)
+  // Violação de integridade de dados
   @ExceptionHandler(DataIntegrityViolationException.class)
   public ResponseEntity<ApiErrorResponse> handleConflict(DataIntegrityViolationException ex,
                                                          HttpServletRequest request) {
+    log.warn("Violação de integridade de dados: {}", ex.getMessage());
     return ResponseEntity.status(HttpStatus.CONFLICT)
       .body(buildError(HttpStatus.CONFLICT, "Violação de integridade de dados", request.getRequestURI(), null));
   }
 
-  // 500 - General Exception
+  // Exceção geral
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ApiErrorResponse> handleGeneral(Exception ex, HttpServletRequest request) {
-    log.error("Erro inesperado", ex);
+    log.error("Erro inesperado na aplicação", ex);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .body(buildError(HttpStatus.INTERNAL_SERVER_ERROR, "Erro interno do servidor",
-        request.getRequestURI(), null));
+      .body(buildError(HttpStatus.INTERNAL_SERVER_ERROR, "Erro interno do servidor", request.getRequestURI(), null));
   }
 
 }

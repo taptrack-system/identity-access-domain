@@ -1,8 +1,8 @@
 package com.identityaccessdomain.userservice.application.query;
 
 import com.identityaccessdomain.userservice.api.dto.UserResponseDTO;
-import com.identityaccessdomain.userservice.infra.search.UserSearchRepository;
 import com.identityaccessdomain.userservice.application.mapping.UserMapper;
+import com.identityaccessdomain.userservice.infra.search.UserSearchRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,6 +28,7 @@ public class UserQueryServiceImpl implements UserQueryService {
 
   @Override
   public List<UserResponseDTO> findAll() {
+    log.info("Buscando todos os usuários no Elasticsearch");
     return StreamSupport.stream(searchRepository.findAll().spliterator(), false)
       .map(userMapper::documentToResponseDto)
       .collect(Collectors.toList());
@@ -35,6 +36,8 @@ public class UserQueryServiceImpl implements UserQueryService {
 
   @Override
   public Optional<UserResponseDTO> findById(Long id) {
+    log.info("Buscando usuário ID {} no Elasticsearch", id);
     return searchRepository.findById(id).map(userMapper::documentToResponseDto);
   }
+
 }

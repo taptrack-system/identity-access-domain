@@ -181,7 +181,6 @@
                     </argLine>
                 </configuration>
             </plugin>
-
         </plugins>
     </build>
 

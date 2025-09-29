@@ -19,17 +19,7 @@ spring:
   # Elasticsearch Configuration
   elasticsearch:
     uris: ${ELASTIC_HOST:localhost}:${ELASTIC_PORT:9200}
-#    username: ${ELASTIC_USER:elastic}
-#    password: ${ELASTIC_PASSWORD:changeme}
 
-#  data:
-#    elasticsearch:
-#      client:
-#        endpoints: ${ELASTIC_HOST:localhost}:${ELASTIC_PORT:9200}
-#      repositories:
-#        enabled: true
-
-# Ajustes de logging específicos para produção
 logging:
   level:
     root: INFO

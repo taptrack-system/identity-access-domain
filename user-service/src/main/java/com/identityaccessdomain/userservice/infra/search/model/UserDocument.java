@@ -1,7 +1,9 @@
 package com.identityaccessdomain.userservice.infra.search.model;
 
-import lombok.Builder;
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -13,8 +15,10 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
  * @author Juliane Maran
  * @since 28/09/2025
  */
-@Data
-@Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Document(indexName = "users")
 public class UserDocument {
 

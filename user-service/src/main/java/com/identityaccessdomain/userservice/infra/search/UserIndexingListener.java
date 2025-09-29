@@ -1,11 +1,11 @@
 package com.identityaccessdomain.userservice.infra.search;
 
+import com.identityaccessdomain.userservice.application.mapping.UserMapper;
 import com.identityaccessdomain.userservice.domain.user.events.UserCreatedEvent;
 import com.identityaccessdomain.userservice.domain.user.events.UserDeletedEvent;
 import com.identityaccessdomain.userservice.domain.user.events.UserUpdatedEvent;
 import com.identityaccessdomain.userservice.domain.user.repository.UserRepository;
 import com.identityaccessdomain.userservice.infra.search.model.UserDocument;
-import com.identityaccessdomain.userservice.application.mapping.UserMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -50,13 +50,11 @@ public class UserIndexingListener {
       UserDocument doc = userMapper.entityToDocument(entity);
       try {
         searchRepository.save(doc);
+        log.info("Usuário {} indexado com sucesso no Elasticsearch", id);
       } catch (Exception e) {
-        // retry/backoff or persist to a dead-letter store for later reprocessing
-        // log and swallow or rethrow depending on policy
-        log.error("Falha ao indexar usuário {} no ES", id, e);
+        log.error("Falha ao indexar usuário {} no Elasticsearch", id, e);
       }
     });
   }
-
 
 }
