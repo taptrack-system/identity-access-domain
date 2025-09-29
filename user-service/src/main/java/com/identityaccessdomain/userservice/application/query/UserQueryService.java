@@ -3,7 +3,6 @@ package com.identityaccessdomain.userservice.application.query;
 import com.identityaccessdomain.userservice.api.dto.UserResponseDTO;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * user-service
@@ -17,8 +16,6 @@ public interface UserQueryService {
 
   List<UserResponseDTO> findAll();
 
-  Optional<UserResponseDTO> findById(Long id);
-
-  // adicionais: search by name, pagination, filters...
+  UserResponseDTO findById(Long id);
 
 }
