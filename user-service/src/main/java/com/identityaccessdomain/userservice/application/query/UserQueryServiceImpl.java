@@ -45,10 +45,6 @@ public class UserQueryServiceImpl implements UserQueryService {
         log.warn("Usuário com ID {} não encontrado no Elasticsearch (Query Service).", id);
         return new UserNotFoundException("Usuário com ID " + id + " não encontrado.");
       });
-    // Alternativamente, se o UserValidationHelper for para o banco de escrita,
-    // o Query Service deveria ter sua própria forma de tratar o "não encontrado".
-    // No contexto do CQRS, o query service é responsável por sua própria fonte de dados (Elasticsearch).
-    // Então, lançar a exceção diretamente aqui é apropriado.
   }
 
 }

@@ -38,8 +38,8 @@ public class UserController {
   @GetMapping("/{id}")
   public ResponseEntity<UserResponseDTO> getById(@PathVariable Long id) {
     log.debug("GET /users/{} - Buscar usuário por ID.", id);
-    UserResponseDTO user = userQueryService.findById(id); // O serviço já lança a exceção
-    return ResponseEntity.ok(user);
+    UserResponseDTO user = userQueryService.findById(id); // Chama o serviço
+    return ResponseEntity.ok(user); // Retorna o DTO diretamente, sabendo que user nunca será nulo aqui
   }
 
   @PostMapping

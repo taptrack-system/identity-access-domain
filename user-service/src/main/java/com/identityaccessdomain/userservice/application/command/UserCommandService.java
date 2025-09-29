@@ -3,8 +3,6 @@ package com.identityaccessdomain.userservice.application.command;
 import com.identityaccessdomain.userservice.api.dto.UserRequestDTO;
 import com.identityaccessdomain.userservice.api.dto.UserResponseDTO;
 
-import java.util.Optional;
-
 /**
  * user-service
  * <p>
@@ -17,9 +15,9 @@ public interface UserCommandService {
 
   UserResponseDTO create(UserRequestDTO dto);
 
-  Optional<UserResponseDTO> update(Long id, UserRequestDTO dto);
+  UserResponseDTO update(Long id, UserRequestDTO dto);
 
-  Optional<UserResponseDTO> partialUpdate(Long id, UserRequestDTO dto);
+  UserResponseDTO partialUpdate(Long id, UserRequestDTO dto);
 
   void delete(Long id);
 

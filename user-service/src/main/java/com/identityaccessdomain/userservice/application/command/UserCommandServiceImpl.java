@@ -15,8 +15,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
-
 /**
  * user-service
  *
@@ -51,7 +49,7 @@ public class UserCommandServiceImpl implements UserCommandService {
 
   @Override
   @Transactional
-  public Optional<UserResponseDTO> update(Long id, UserRequestDTO dto) {
+  public UserResponseDTO update(Long id, UserRequestDTO dto) {
     log.debug("Atualizando usuário ID {}", id);
 
     User existingUser = validationHelper.findUserByIdOrThrow(id); // Busca ou lança exceção
@@ -64,12 +62,12 @@ public class UserCommandServiceImpl implements UserCommandService {
     log.info("Usuário ID {} atualizado com sucesso.", updatedUser.getId());
     eventPublisher.publishEvent(new UserUpdatedEvent(this, updatedUser.getId()));
 
-    return Optional.ofNullable(userMapper.entityToResponseDto(updatedUser));
+    return userMapper.entityToResponseDto(updatedUser);
   }
 
   @Override
   @Transactional
-  public Optional<UserResponseDTO> partialUpdate(Long id, UserRequestDTO dto) {
+  public UserResponseDTO partialUpdate(Long id, UserRequestDTO dto) {
     log.debug("Atualização parcial do usuário ID {}", id);
 
     User existing = validationHelper.findUserByIdOrThrow(id); // Busca ou lança exceção
@@ -86,7 +84,7 @@ public class UserCommandServiceImpl implements UserCommandService {
     log.info("Atualização parcial concluída para usuário ID {}", saved.getId());
     eventPublisher.publishEvent(new UserUpdatedEvent(this, saved.getId()));
 
-    return Optional.ofNullable(userMapper.entityToResponseDto(saved));
+    return userMapper.entityToResponseDto(saved);
   }
 
   @Override
