@@ -28,10 +28,20 @@
     </scm>
     <properties>
         <java.version>25</java.version> <!-- Versão LTS lançada em setembro de 2025 -->
+        <!-- Versões estáveis e atualizadas -->
         <mapstruct.version>1.6.3</mapstruct.version>
         <lombok.version>1.18.40</lombok.version>
-        <testcontainers.versin>3.5.5</testcontainers.versin> <!-- Versão estável -->
+        <testcontainers.versin>3.5.5</testcontainers.versin>
         <spring-cloud.version>2025.0.0</spring-cloud.version>
+        <springdoc-openapi.version>2.8.9</springdoc-openapi.version>
+        <!-- Corrige vulnerabilidades -->
+        <eureka-client.version>5.0.0-M2</eureka-client.version>
+        <commons-lang3.version>3.19.0</commons-lang3.version>
+        <commons-compress.version>1.28.0</commons-compress.version>
+        <xstream.version>1.4.21</xstream.version>
+        <spectator-api.version>1.9.0</spectator-api.version>
+        <google-guava.version>33.5.0-jre</google-guava.version>
+        <httpclient.version>4.5.14</httpclient.version>
     </properties>
     <dependencies>
         <dependency>
@@ -92,17 +102,61 @@
             <version>${lombok.version}</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct-processor</artifactId>
+            <version>${mapstruct.version}</version>
+            <scope>provided</scope>
+        </dependency>
         <!-- SpringDoc OpenAPI -->
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>2.8.9</version>
+            <version>${springdoc-openapi.version}</version>
         </dependency>
+        <!-- Eureka Client -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+            <version>${eureka-client.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-lang</groupId>
+                    <artifactId>commons-lang</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
-
+        <!-- Resolve Vulnerabilidades -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${commons-lang3.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+            <version>${commons-compress.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.thoughtworks.xstream</groupId>
+            <artifactId>xstream</artifactId>
+            <version>${xstream.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>${httpclient.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.netflix.spectator</groupId>
+            <artifactId>spectator-api</artifactId>
+            <version>${spectator-api.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${google-guava.version}</version>
+        </dependency>
         <!-- Tests -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -142,7 +196,7 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-    
+
     <build>
         <plugins>
             <plugin>
@@ -167,6 +221,11 @@
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok-mapstruct-binding</artifactId>
                             <version>0.2.0</version>
+                        </path>
+                        <path>
+                            <groupId>org.mapstruct</groupId>
+                            <artifactId>mapstruct-processor</artifactId>
+                            <version>${mapstruct.version}</version>
                         </path>
                     </annotationProcessorPaths>
                     <compilerArgs>
