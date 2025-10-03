@@ -1,0 +1,18 @@
+# application-dev.yml
+# --- Spring
+spring:
+  # --- JPA / Hibernate
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  # --- Jackson
+  jackson:
+    serialization:
+      INDENT_OUTPUT: true
+
+# --- Loggers
+logging:
+  level:
+    root: DEBUG
+    org.springframework: DEBUG
