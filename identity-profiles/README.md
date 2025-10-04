@@ -251,3 +251,51 @@ Permite que um usuário tenha múltiplos papéis.
     * status ativo
 * `RoleServiceImpl`: evita duplicidade de roles.
 * `AuditLogServiceImpl`: centraliza a auditoria.
+
+---
+
+| Anotações                                          | Descrição                                                                   |
+|:---------------------------------------------------|:----------------------------------------------------------------------------|
+| `@SpringBootTest(classes = RoleServiceImpl.class)` | Cria um contexto Spring Boot **leve**, apenas com o bean da classe testada. |
+| `MockitoBean` nos repositórios e mapeadores        | Mock controlado pelo Spring, injetado automaticamente no bean principal.    |
+| `@Transactional`                                   | Garante rollback automático após cada teste.                                |
+| `assertThat` (AssertJ)                             | Asserções fluent e legíveis                                                 |
+| `@DisplayName`                                     | Descrições amigáveis e legíveis no relatório do teste                       |
+
+---
+
+| Tipo de Teste                             | Objetivo                                            | Execução            | Escopo                |
+|:------------------------------------------|:----------------------------------------------------|:--------------------|-----------------------|
+| Teste Unitário (Mockito puro)             | Testar a lógica da classe isoladamente              | Muito rápido        | Sem contexto Spring   |
+| Teste com Spring Boot (`@SpringBootTest`) | Validar integração entre beans reais e mocks Spring | Um pouco mais lento | Usa DI real do Spring |
+
+### Teste Unitário (Mockito puro)
+
+#### Vantagens
+
+* Roda em milissegundos
+* Ideal para CI/CD
+* Não depende do Spring Context
+
+### Resumo das Diferenças
+
+| Aspecto             | `RoleServiceImplUnitTest` | `RoleServiceImplSpringTest` |
+|:--------------------|:--------------------------|:----------------------------|
+| Contexto Spring     | Não usa Spring            | Usa Spring Boot Context     |
+| Performance         | Muito rápido              | Levemente mais lento        |
+| Injeção             | `@InjectMocks` (Mockito)  | `@Autowired` + `@MockBean`  |
+| Objetivo            | Lógica isolada            | Integração entre beans      |
+| Rollback automático | Não se aplica             | via `@Transactional`        |
+
+### Recomendação de execução
+
+```bash
+# Roda todos os testes
+mvn test
+
+# Apenas unitários
+mvn test -Dtest=*UnitTest
+
+# Apenas testes de integração Spring
+mvn test -Dtest=*SpringTest
+```

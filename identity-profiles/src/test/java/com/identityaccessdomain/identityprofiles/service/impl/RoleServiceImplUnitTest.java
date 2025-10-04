@@ -22,7 +22,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
-class RoleServiceImplTest {
+/**
+ * Tipo de Teste: Teste Unitário (Mockito Puro) <br>
+ * Objetivo: Testar a lógica da classe isoladamente <br>
+ * Execução: Muito rápido <br>
+ * Escopo: Sem contexto Spring
+ */
+class RoleServiceImplUnitTest {
 
   @Mock
   RoleRepository roleRepository;
