@@ -22,7 +22,7 @@ import java.util.List;
 @RequestMapping("/audit-logs")
 @RequiredArgsConstructor
 public class AuditLogController {
-
+  // Todo: Incluir Logs (em Português)
   private final AuditLogService auditLogService;
 
   @GetMapping

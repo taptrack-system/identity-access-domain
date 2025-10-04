@@ -23,7 +23,7 @@ import java.util.List;
 @RequestMapping("/roles")
 @RequiredArgsConstructor
 public class RoleController {
-
+  // Todo: Incluir Logs (em Português)
   private final RoleService roleService;
 
   @PostMapping

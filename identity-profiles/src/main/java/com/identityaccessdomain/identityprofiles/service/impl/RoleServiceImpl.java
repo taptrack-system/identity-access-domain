@@ -27,15 +27,16 @@ import java.util.NoSuchElementException;
 @RequiredArgsConstructor
 public class RoleServiceImpl implements RoleService {
 
+  // Todo: Incluir Logs (em Português)
+
   private final RoleMapper roleMapper;
   private final RoleRepository roleRepository;
   private final AuditLogService auditLogService;
 
   @Override
   public RoleResponseDTO createRole(RoleRequestDTO requestDTO, String performedBy) {
-    log.info("");
     RoleType roleType = RoleType.valueOf(requestDTO.name());
-
+    // Todo: criar um método para 'findByName(roleType)' Role já cadastrada
     roleRepository.findByName(roleType).ifPresent(r -> {
       log.info("Role {} já existe na base de dados.", roleType);
       throw new IllegalArgumentException("Role já existe: " + roleType);

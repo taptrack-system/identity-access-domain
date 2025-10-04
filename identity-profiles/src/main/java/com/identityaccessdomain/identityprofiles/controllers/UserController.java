@@ -23,7 +23,7 @@ import java.util.List;
 @RequestMapping("/users")
 @RequiredArgsConstructor
 public class UserController {
-
+  // Todo: Incluir Logs (em Português)
   private final UserService userService;
 
   @PostMapping

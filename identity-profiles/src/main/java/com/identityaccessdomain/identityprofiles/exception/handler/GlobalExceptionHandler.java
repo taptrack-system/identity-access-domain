@@ -2,6 +2,7 @@ package com.identityaccessdomain.identityprofiles.exception.handler;
 
 import com.identityaccessdomain.identityprofiles.dto.response.ErrorResponse;
 import com.identityaccessdomain.identityprofiles.exception.ConflictException;
+import com.identityaccessdomain.identityprofiles.exception.InternalServerErrorException;
 import com.identityaccessdomain.identityprofiles.exception.ResourceNotFoundException;
 import com.identityaccessdomain.identityprofiles.exception.UnprocessableEntityException;
 import jakarta.validation.ConstraintViolationException;
@@ -16,6 +17,7 @@ import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
@@ -29,6 +31,8 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+  public static final String VALIDATION_ERROR = "Erro de validação: {}";
+
   private ErrorResponse buildErrorResponse(HttpStatus status, String message, WebRequest request) {
     return ErrorResponse.builder()
       .status(status.value())
@@ -39,13 +43,27 @@ public class GlobalExceptionHandler {
       .build();
   }
 
+  private ResponseEntity<Object> buildResponse(String message, Exception ex) {
+    log.error("Exceção capturada: status={}, mensagem={}, detalhe={}",
+      HttpStatus.INTERNAL_SERVER_ERROR, message, ex.getMessage(), ex);
+
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+      Map.of(
+        "timestamp", LocalDateTime.now(),
+        "status", HttpStatus.INTERNAL_SERVER_ERROR.value(),
+        "error", HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
+        "message", message
+      )
+    );
+  }
+
   // 400 - Validações de @Valid ou @Validated
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex, WebRequest request) {
     String msg = ex.getBindingResult().getFieldErrors().stream()
       .map(err -> err.getField() + ": " + err.getDefaultMessage())
       .collect(Collectors.joining(", "));
-    log.warn("Erro de validação: {}", msg);
+    log.warn(VALIDATION_ERROR, msg);
     return ResponseEntity.badRequest().body(buildErrorResponse(HttpStatus.BAD_REQUEST, msg, request));
   }
 
@@ -55,7 +73,7 @@ public class GlobalExceptionHandler {
     String msg = ex.getConstraintViolations().stream()
       .map(cv -> cv.getPropertyPath() + ": " + cv.getMessage())
       .collect(Collectors.joining(", "));
-    log.warn("Erro de validação: {}", msg);
+    log.warn(VALIDATION_ERROR, msg);
     return ResponseEntity.badRequest().body(buildErrorResponse(HttpStatus.BAD_REQUEST, msg, request));
   }
 
@@ -102,10 +120,16 @@ public class GlobalExceptionHandler {
       .body(buildErrorResponse(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage(), request));
   }
 
+  // 500 INTERNAL_SERVER_ERROR
+  @ExceptionHandler(InternalServerErrorException.class)
+  public ResponseEntity<Object> handleInternalServerError(InternalServerErrorException ex) {
+    return buildResponse(ex.getMessage(), ex);
+  }
+
   // 500 - fallback
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ErrorResponse> handleGeneral(Exception ex, WebRequest request) {
-    log.error("Erro interno: {}", ex.getMessage(), ex);
+    log.error("Erro inesperado no servidor: {}", ex.getMessage(), ex);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
       .body(buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Erro interno no servidor", request));
   }
