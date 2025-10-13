@@ -20,10 +20,10 @@ import java.util.List;
  */
 @Slf4j
 @RestController
-@RequestMapping("/users")
 @RequiredArgsConstructor
+@RequestMapping("/users")
 public class UserController {
-  // Todo: Incluir Logs (em Português)
+
   private final UserService userService;
 
   @PostMapping

@@ -2,6 +2,31 @@
 
 _Centralized user roles and access management._
 
+## Execução
+
+### Ordem de Inicialização
+
+A inicialização seguirá a seguinte sequência:
+
+1. `bootstrap.yml`: busca Config Server (carrega config externas)
+2. `application.yml`: aplica configs locais
+3. Eureka Client: registra no Eureka Server
+
+### Resultado Final Esperado
+
+Ao subir o serviço (`mvn spring-boot:run`), você verá no log:
+
+```bash
+Located environment: name=identity-profiles, profiles=[dev], label=null
+Registering application identity-profiles with eureka with status UP
+```
+
+E no painel do Eureka Server (`http://localhost:8761/`), o serviço aparecerá listado como:
+
+```bash
+IDENTITY-PROFILES   (UP)   http://<IP>:8082/identity-profiles
+```
+
 ## Teste Local
 
 ### Docker
@@ -299,3 +324,39 @@ mvn test -Dtest=*UnitTest
 # Apenas testes de integração Spring
 mvn test -Dtest=*SpringTest
 ```
+
+---
+
+## Arquivos de Configuração do /resources
+
+### `bootstrap.yml`
+
+> Arquivo usado para configurações de inicialização — como integração com o **Spring Cloud Config Server** ou metadados
+> globais do serviço.
+
+*Explicação:*
+
+* Usa `spring.application.name` como identificador do serviço.
+* Define pronto para futura integração com **Config Server**
+* Define `dev` como perfil padrão se não for informado via `SPRING_PROFILES_ACTIVE`.
+
+### `application.yml`
+
+> Configurações do ambiente principal da aplicação — banco de dados, servidor, logging e API docs.
+
+*Explicação:*
+
+* Configura **H2 in-memory** (ideal para dev/test).
+* Habilita **H2 console e SpringDoc Swagger UI**.
+* Define logs em arquivo `logs/identity-profiles.log`.
+* Prepara a app para observabilidade via **Actuator**.
+
+### `logback-spring.xml`
+
+> Arquivo de logging com rotação diária e separação de logs por nível.
+
+*Explicação:*
+
+* Grava logs no console, arquivo geral e arquivo exclusivo para **ERRORs**.
+* Faz **rotação diária** com histórico de 14 dias.
+* Mantém formato legível e consistente.

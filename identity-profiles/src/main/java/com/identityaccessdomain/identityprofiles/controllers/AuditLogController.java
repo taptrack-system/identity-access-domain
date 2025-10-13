@@ -19,10 +19,10 @@ import java.util.List;
  */
 @Slf4j
 @RestController
-@RequestMapping("/audit-logs")
 @RequiredArgsConstructor
+@RequestMapping("/audit-logs")
 public class AuditLogController {
-  // Todo: Incluir Logs (em Português)
+
   private final AuditLogService auditLogService;
 
   @GetMapping

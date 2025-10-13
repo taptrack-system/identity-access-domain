@@ -6,11 +6,13 @@ import com.identityaccessdomain.identityprofiles.service.RoleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * identity-profiles
@@ -20,10 +22,10 @@ import java.util.List;
  */
 @Slf4j
 @RestController
-@RequestMapping("/roles")
 @RequiredArgsConstructor
+@RequestMapping("/roles")
 public class RoleController {
-  // Todo: Incluir Logs (em Português)
+
   private final RoleService roleService;
 
   @PostMapping
@@ -40,7 +42,9 @@ public class RoleController {
 
   @GetMapping
   public ResponseEntity<List<RoleResponseDTO>> listRoles() {
-    return ResponseEntity.ok(roleService.listRoles());
+    return ResponseEntity.ok()
+      .cacheControl(CacheControl.maxAge(30, TimeUnit.SECONDS))
+      .body(roleService.listRoles());
   }
 
 }

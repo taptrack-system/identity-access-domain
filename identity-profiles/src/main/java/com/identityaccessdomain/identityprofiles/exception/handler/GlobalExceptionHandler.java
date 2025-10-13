@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-  public static final String VALIDATION_ERROR = "Erro de validação: {}";
+  private static final String VALIDATION_ERROR = "Erro de validação: {}";
 
   private ErrorResponse buildErrorResponse(HttpStatus status, String message, WebRequest request) {
     return ErrorResponse.builder()
@@ -43,21 +43,7 @@ public class GlobalExceptionHandler {
       .build();
   }
 
-  private ResponseEntity<Object> buildResponse(String message, Exception ex) {
-    log.error("Exceção capturada: status={}, mensagem={}, detalhe={}",
-      HttpStatus.INTERNAL_SERVER_ERROR, message, ex.getMessage(), ex);
-
-    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-      Map.of(
-        "timestamp", LocalDateTime.now(),
-        "status", HttpStatus.INTERNAL_SERVER_ERROR.value(),
-        "error", HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
-        "message", message
-      )
-    );
-  }
-
-  // 400 - Validações de @Valid ou @Validated
+  // 400 - Erros de validação (Bean Validation)
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex, WebRequest request) {
     String msg = ex.getBindingResult().getFieldErrors().stream()
@@ -68,8 +54,7 @@ public class GlobalExceptionHandler {
   }
 
   @ExceptionHandler(ConstraintViolationException.class)
-  public ResponseEntity<ErrorResponse> handleConstraintViolation(ConstraintViolationException ex,
-                                                                 WebRequest request) {
+  public ResponseEntity<ErrorResponse> handleConstraintViolation(ConstraintViolationException ex, WebRequest request) {
     String msg = ex.getConstraintViolations().stream()
       .map(cv -> cv.getPropertyPath() + ": " + cv.getMessage())
       .collect(Collectors.joining(", "));
@@ -77,7 +62,14 @@ public class GlobalExceptionHandler {
     return ResponseEntity.badRequest().body(buildErrorResponse(HttpStatus.BAD_REQUEST, msg, request));
   }
 
-  // 404 Recurso não encontrado
+  // 400 - Argumentos inválidos em runtime
+  @ExceptionHandler(IllegalArgumentException.class)
+  public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex, WebRequest request) {
+    log.warn("Argumento inválido: {}", ex.getMessage());
+    return ResponseEntity.badRequest().body(buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request));
+  }
+
+  // 404 - Recurso não encontrado
   @ExceptionHandler(ResourceNotFoundException.class)
   public ResponseEntity<ErrorResponse> handleNotFound(ResourceNotFoundException ex, WebRequest request) {
     log.warn("Recurso não encontrado: {}", ex.getMessage());
@@ -85,17 +77,16 @@ public class GlobalExceptionHandler {
       .body(buildErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage(), request));
   }
 
-  // 405 (Metodo HTTP não suportado)
+  // 405 - Metodo HTTP não suportado
   @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-  public ResponseEntity<ErrorResponse> handleMethodNotAllowed(HttpRequestMethodNotSupportedException ex,
-                                                              WebRequest request) {
+  public ResponseEntity<ErrorResponse> handleMethodNotAllowed(HttpRequestMethodNotSupportedException ex, WebRequest request) {
     String msg = "Método não permitido: " + ex.getMethod();
     log.warn(msg);
     return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
       .body(buildErrorResponse(HttpStatus.METHOD_NOT_ALLOWED, msg, request));
   }
 
-  // 408 (tempo de requisição esgotado) → usado geralmente em proxy, mas pode ser manual
+  // 408 - Timeout
   @ExceptionHandler(TimeoutException.class)
   public ResponseEntity<ErrorResponse> handleTimeout(TimeoutException ex, WebRequest request) {
     log.error("Timeout: {}", ex.getMessage());
@@ -103,7 +94,7 @@ public class GlobalExceptionHandler {
       .body(buildErrorResponse(HttpStatus.REQUEST_TIMEOUT, ex.getMessage(), request));
   }
 
-  // 409 Recurso já existe
+  // 409 - Conflito
   @ExceptionHandler(ConflictException.class)
   public ResponseEntity<ErrorResponse> handleConflict(ConflictException ex, WebRequest request) {
     log.warn("Conflito de dados: {}", ex.getMessage());
@@ -111,31 +102,24 @@ public class GlobalExceptionHandler {
       .body(buildErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), request));
   }
 
-  // 422
+  // 422 - Entidade não processável
   @ExceptionHandler(UnprocessableEntityException.class)
-  public ResponseEntity<ErrorResponse> handleUnprocessableEntity(UnprocessableEntityException ex,
-                                                                 WebRequest request) {
+  public ResponseEntity<ErrorResponse> handleUnprocessable(UnprocessableEntityException ex, WebRequest request) {
     log.warn("Entidade não processável: {}", ex.getMessage());
     return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
       .body(buildErrorResponse(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage(), request));
   }
 
-  // 500 INTERNAL_SERVER_ERROR
-  @ExceptionHandler(InternalServerErrorException.class)
-  public ResponseEntity<Object> handleInternalServerError(InternalServerErrorException ex) {
-    return buildResponse(ex.getMessage(), ex);
-  }
-
-  // 500 - fallback
-  @ExceptionHandler(Exception.class)
-  public ResponseEntity<ErrorResponse> handleGeneral(Exception ex, WebRequest request) {
-    log.error("Erro inesperado no servidor: {}", ex.getMessage(), ex);
+  // 500 - Erro interno
+  @ExceptionHandler({InternalServerErrorException.class, Exception.class})
+  public ResponseEntity<ErrorResponse> handleServerError(Exception ex, WebRequest request) {
+    log.error("Erro interno no servidor: {}", ex.getMessage(), ex);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
       .body(buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Erro interno no servidor", request));
   }
 
-  // 503 - indisponibilidade (exemplo)
-  @ExceptionHandler({IllegalStateException.class})
+  // 503 - Serviço indisponível
+  @ExceptionHandler(IllegalStateException.class)
   public ResponseEntity<ErrorResponse> handleServiceUnavailable(IllegalStateException ex, WebRequest request) {
     log.error("Serviço indisponível: {}", ex.getMessage());
     return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)

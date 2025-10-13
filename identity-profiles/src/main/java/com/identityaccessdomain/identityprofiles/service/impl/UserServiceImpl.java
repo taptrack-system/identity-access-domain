@@ -38,13 +38,6 @@ public class UserServiceImpl implements UserService {
   private final RoleRepository roleRepository;
   private final AuditLogService auditLogService;
 
-  /**
-   * Cadastrar Usuário
-   *
-   * @param requestDTO  Campos necessários para cadastrar o usuário
-   * @param performedBy Usuário responsável
-   * @return Retorna as informações do usuário cadastrado
-   */
   @Override
   @Transactional
   public UserResponseDTO createUser(UserRequestDTO requestDTO, String performedBy) {
@@ -67,54 +60,33 @@ public class UserServiceImpl implements UserService {
       user.getId(),
       "CREATE",
       performedBy,
-      "Usuário criado com roles: " + roles.stream().map(r -> r.getName().name()).toList()
+      "Usuário criado com roles: " + roles.stream().map(Role::getName).toList()
     );
 
     return userMapper.toResponseDTO(user);
   }
 
-  /**
-   * Obter Usuário por ID
-   *
-   * @param id Identificador Único do Usuário
-   * @return Retorna UserResponseDTO
-   */
   @Override
   @Transactional(readOnly = true)
   public UserResponseDTO getUserById(Long id) {
     log.info("Buscando usuário pelo ID: {}", id);
-
     User user = findUserByIdOrThrow(id);
-
     log.info("Usuário encontrado: id={}, username={}", user.getId(), user.getUsername());
     return userMapper.toResponseDTO(user);
   }
 
-  /**
-   * Listar Usuários
-   *
-   * @return Retorna uma Lista de Usuários, se não existir nenhum usuário cadastrado na lista retornada é vazia
-   */
   @Override
   @Transactional(readOnly = true)
   public List<UserResponseDTO> listUsers() {
     log.info("Listando todos os usuários");
-
     List<UserResponseDTO> users = userRepository.findAll()
       .stream()
       .map(userMapper::toResponseDTO)
       .toList();
-
     log.info("Total de usuários encontrados: {}", users.size());
     return users;
   }
 
-  /**
-   * Excluir Usuário por ID
-   *
-   * @param id          Identificação única do Usuário
-   * @param performedBy Usuário responsável
-   */
   @Override
   @Transactional
   public void deleteUser(Long id, String performedBy) {
@@ -133,12 +105,6 @@ public class UserServiceImpl implements UserService {
 
   // --- Métodos Auxiliares
 
-  /**
-   * Validar Duplicidade de E-mail
-   *
-   * @param email E-mail informado
-   * @throws ConflictException Lança exceção para o e-mail não encontrado
-   */
   private void validateEmailDuplication(String email) {
     log.debug("Validando duplicidade de e-mail: {}", email);
     if (userRepository.existsByEmail(email)) {
@@ -147,12 +113,6 @@ public class UserServiceImpl implements UserService {
     }
   }
 
-  /**
-   * Validar Duplicidade de Username
-   *
-   * @param username Nome de usuário
-   * @throws ConflictException Lança exceção para username não encontrada.
-   */
   private void validateUsernameDuplication(String username) {
     log.debug("Validando duplicidade de username: {}", username);
     if (userRepository.existsByUsername(username)) {
@@ -161,13 +121,6 @@ public class UserServiceImpl implements UserService {
     }
   }
 
-  /**
-   * Centraliza busca por ID e lança exceção
-   *
-   * @param id Identificador Único do Usuário
-   * @return Retorna o ID
-   * @throws ResourceNotFoundException Lança exceção para usuário não encontrado
-   */
   private User findUserByIdOrThrow(Long id) {
     return userRepository.findById(id)
       .orElseThrow(() -> {
@@ -176,22 +129,22 @@ public class UserServiceImpl implements UserService {
       });
   }
 
-  /**
-   * Centraliza mapeamento de roles
-   *
-   * @param roleNames Nome do papel (role)
-   * @return Retorna uma lista de pápeis (roles)
-   * @throws ResourceNotFoundException Lançar exceção para papel (role) não encontrada
-   */
   private Set<Role> mapRolesFromRequest(Set<String> roleNames) {
     log.debug("Mapeando roles do usuário: {}", roleNames);
     return roleNames.stream()
-      .map(roleName -> roleRepository.findByName(RoleType.valueOf(roleName))
-        .orElseThrow(() -> {
-          log.error("Role não encontrada: {}", roleName);
-          return new ResourceNotFoundException("Role não encontrada: " + roleName);
-        })
-      )
+      .map(roleName -> {
+        try {
+          var roleType = RoleType.valueOf(roleName.toUpperCase());
+          return roleRepository.findByName(roleType)
+            .orElseThrow(() -> {
+              log.error("Role não encontrada: {}", roleType);
+              return new ResourceNotFoundException("Role não encontrada: " + roleType);
+            });
+        } catch (IllegalArgumentException ex) {
+          log.error("Role inválida informada: {}", roleName, ex);
+          throw new ResourceNotFoundException("Role inválida: " + roleName);
+        }
+      })
       .collect(Collectors.toSet());
   }
 

@@ -78,3 +78,20 @@ CREATE INDEX idx_audit_action ON audit_log(action);
 
 -- details em audit_log foi definido como CLOB (suporta JSON)
 
+INSERT INTO roles (name, description)
+SELECT 'ADMIN', 'System administrator with full access'
+WHERE NOT EXISTS (SELECT 1 FROM roles WHERE name = 'ADMIN');
+
+INSERT INTO roles (name, description)
+SELECT 'CUSTOMER', 'End customer with restricted access'
+WHERE NOT EXISTS (SELECT 1 FROM roles WHERE name = 'CUSTOMER');
+
+INSERT INTO roles (name, description)
+SELECT 'SUPPLIER', 'Supplier user with specific permissions'
+WHERE NOT EXISTS (SELECT 1 FROM roles WHERE name = 'SUPPLIER');
+
+INSERT INTO roles (name, description)
+SELECT 'MANAGER', 'Manager with supervisory permissions'
+WHERE NOT EXISTS (SELECT 1 FROM roles WHERE name = 'MANAGER');
+
+

@@ -27,10 +27,11 @@ public class Role {
 
   @NotNull(message = "O nome do perfil é obrigatório")
   @Enumerated(EnumType.STRING)
-  @Column(unique = true, nullable = false, length = 50)
+  @Column(name = "name", unique = true, nullable = false, length = 50)
   private RoleType name;
 
   @Size(max = 255, message = "A descrição deve ter no máximo 255 caracteres")
+  @Column(length = 255, name = "description")
   private String description;
 
 }

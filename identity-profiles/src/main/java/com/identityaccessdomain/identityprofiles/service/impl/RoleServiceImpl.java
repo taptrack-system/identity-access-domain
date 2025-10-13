@@ -10,6 +10,7 @@ import com.identityaccessdomain.identityprofiles.service.AuditLogService;
 import com.identityaccessdomain.identityprofiles.service.RoleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,21 +34,18 @@ public class RoleServiceImpl implements RoleService {
 
   @Override
   public RoleResponseDTO createRole(RoleRequestDTO requestDTO, String performedBy) {
-    RoleType roleType = RoleType.valueOf(requestDTO.name());
-    roleRepository.findByName(roleType).ifPresent(r -> {
-      log.info("Role {} já existe na base de dados.", roleType);
-      throw new IllegalArgumentException("Role já existe: " + roleType);
-    });
-
+    // Converte nome -> RoleType de forma segura (RoleMapper lança IllegalArgumentException se inválido)
     Role role = roleMapper.toEntity(requestDTO);
-    role.setName(roleType);
+
+    roleRepository.findByName(role.getName()).ifPresent(r -> {
+      log.info("Role {} já existe na base de dados.", r.getName());
+      throw new IllegalArgumentException("Role já existe: " + r.getName());
+    });
 
     role = roleRepository.save(role);
 
-    auditLogService.logEvent(
-      "Role", role.getId(),
-      "CREATE", performedBy,
-      "Role criada: " + role.getName().name());
+    auditLogService.logEvent("Role", role.getId(), "CREATE", performedBy,
+      "Role criada: " + role.getName());
 
     return roleMapper.toResponseDTO(role);
   }
@@ -55,7 +53,14 @@ public class RoleServiceImpl implements RoleService {
   @Override
   @Transactional(readOnly = true)
   public RoleResponseDTO getRoleByName(String name) {
-    RoleType roleType = RoleType.valueOf(name);
+    log.debug("Procurando role pelo nome: {}", name);
+    RoleType roleType;
+    try {
+      roleType = RoleType.valueOf(name.trim().toUpperCase());
+    } catch (IllegalArgumentException ex) {
+      throw new NoSuchElementException("Role inválida: " + name);
+    }
+
     Role role = roleRepository.findByName(roleType)
       .orElseThrow(() -> new NoSuchElementException("Role não encontrada: " + name));
     return roleMapper.toResponseDTO(role);
@@ -64,7 +69,8 @@ public class RoleServiceImpl implements RoleService {
   @Override
   @Transactional(readOnly = true)
   public List<RoleResponseDTO> listRoles() {
-    return roleRepository.findAll().stream()
+    log.info("Listando todas as roles");
+    return roleRepository.findAll(Sort.by(Sort.Direction.ASC, "name")).stream()
       .map(roleMapper::toResponseDTO)
       .toList();
   }
