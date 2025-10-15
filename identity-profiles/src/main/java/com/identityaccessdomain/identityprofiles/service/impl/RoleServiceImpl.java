@@ -8,6 +8,8 @@ import com.identityaccessdomain.identityprofiles.mapping.RoleMapper;
 import com.identityaccessdomain.identityprofiles.repositories.RoleRepository;
 import com.identityaccessdomain.identityprofiles.service.AuditLogService;
 import com.identityaccessdomain.identityprofiles.service.RoleService;
+import com.taptrack.library.exceptions.types.ConflictException;
+import com.taptrack.library.exceptions.types.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
@@ -39,7 +41,7 @@ public class RoleServiceImpl implements RoleService {
 
     roleRepository.findByName(role.getName()).ifPresent(r -> {
       log.info("Role {} já existe na base de dados.", r.getName());
-      throw new IllegalArgumentException("Role já existe: " + r.getName());
+      throw new ConflictException("Role já existe: " + r.getName());
     });
 
     role = roleRepository.save(role);
@@ -58,11 +60,11 @@ public class RoleServiceImpl implements RoleService {
     try {
       roleType = RoleType.valueOf(name.trim().toUpperCase());
     } catch (IllegalArgumentException ex) {
-      throw new NoSuchElementException("Role inválida: " + name);
+      throw new NoSuchElementException("Role inválida: " + name, ex);
     }
 
     Role role = roleRepository.findByName(roleType)
-      .orElseThrow(() -> new NoSuchElementException("Role não encontrada: " + name));
+      .orElseThrow(() -> new ResourceNotFoundException("Role não encontrada: " + name));
     return roleMapper.toResponseDTO(role);
   }
 

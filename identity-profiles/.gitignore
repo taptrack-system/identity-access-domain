@@ -5,6 +5,7 @@ target/
 !**/src/test/**/target/
 ./src/scripts/
 htmlReport/
+logs/
 
 ### STS ###
 .apt_generated
