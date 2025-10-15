@@ -1,5 +1,4 @@
-# application-prod.yml
-# Perfil MySQL
+# application-prod.yml (MySQL)
 spring:
   config:
     activate:
@@ -10,7 +9,6 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: ${DB_USER:admin}
     password: ${DB_PASSWORD:password}
-
   jpa:
     hibernate:
       ddl-auto: none
@@ -19,6 +17,5 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
-
   flyway:
     locations: classpath:db/migration/mysql

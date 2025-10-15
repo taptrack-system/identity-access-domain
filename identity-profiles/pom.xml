@@ -245,4 +245,11 @@
         </plugins>
     </build>
 
+    <repositories>
+        <repository>
+            <id>github</id>
+            <url>https://maven.pkg.github.com/taptrack-system/libraries</url>
+        </repository>
+    </repositories>
+
 </project>

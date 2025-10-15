@@ -1,30 +1,25 @@
-# Etapa 1: Build da aplicação
-FROM maven:3.9.2-eclipse-temurin-25 AS build
-
+# identity-access-domain/identity-profiles/Dockerfile
+FROM maven:3.9.11-eclipse-temurin-25 AS build
 WORKDIR /app
 
-# Copiar arquivos do Maven
+# Copiar e instalar biblioteca local (caso exista)
+COPY ../libraries/exceptions /libraries/exceptions
+RUN mvn -f /libraries/exceptions/pom.xml clean install -DskipTests || true
+
+# Copiar projeto
 COPY pom.xml .
 COPY src ./src
 
-# Build da aplicação (packaging)
+# Build da aplicação
 RUN mvn clean package -DskipTests
 
-# Etapa 2: Criar imagem de runtime
+# Etapa 2: Runtime
 FROM eclipse-temurin:25-jdk-alpine
-
 WORKDIR /app
-
-# Copiar JAR gerado
 COPY --from=build /app/target/identity-profiles-*.jar app.jar
 
-# Variáveis de ambiente padrão (podem ser sobrescritas pelo .env ou docker-compose)
-ENV SPRING_PROFILES_ACTIVE=h2,dev
-ENV JAVA_OPTS="-Xms256m -Xmx512m"
+ENV SPRING_PROFILES_ACTIVE=dev,h2
 ENV APP_PORT=8081
+EXPOSE 8081
 
-# Expor porta
-EXPOSE ${APP_PORT}
-
-# Comando para rodar a aplicação
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
