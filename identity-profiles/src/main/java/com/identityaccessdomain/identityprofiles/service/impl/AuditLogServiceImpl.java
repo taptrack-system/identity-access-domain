@@ -2,10 +2,10 @@ package com.identityaccessdomain.identityprofiles.service.impl;
 
 import com.identityaccessdomain.identityprofiles.domain.entity.AuditLog;
 import com.identityaccessdomain.identityprofiles.dto.response.AuditLogResponseDTO;
-import com.identityaccessdomain.identityprofiles.exception.InternalServerErrorException;
 import com.identityaccessdomain.identityprofiles.mapping.AuditLogMapper;
 import com.identityaccessdomain.identityprofiles.repositories.AuditLogRepository;
 import com.identityaccessdomain.identityprofiles.service.AuditLogService;
+import com.taptrack.library.exceptions.types.InternalServerErrorException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

@@ -36,49 +36,37 @@
     </scm>
     <properties>
         <java.version>25</java.version>
+        <spring-cloud.version>2025.0.0</spring-cloud.version>
         <mapstruct.version>1.6.3</mapstruct.version>
         <projectlombok.version>1.18.42</projectlombok.version>
         <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
         <springdoc-openapi.version>2.8.9</springdoc-openapi.version>
         <commons-lang3.version>3.19.0</commons-lang3.version>
         <httpclient5.version>5.4.1</httpclient5.version>
-        <spring-cloud.version>2025.0.0</spring-cloud.version>
         <spring-cloud-starter.version>4.3.0</spring-cloud-starter.version>
     </properties>
     <dependencies>
-        <!-- Spring Boot Core -->
+        <!-- Web + Validation -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>ch.qos.logback</groupId>
-                    <artifactId>logback-core</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <!--
-            Vulnerability found in dependency:
-            Provides transitive vulnerable dependency maven:ch.qos.logback:logback-core:1.5.18
-            CVE-2025-11226  6.9     Transitive Conditional processing of logback.xml configuration file, in conjuction with Spring Framework and Janino
-        -->
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-core</artifactId>
-            <version>1.5.19</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
-
         <!-- Actuator -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
-
-        <!-- Data & Database -->
+        <!-- Configuration Processor -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!-- Data -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
@@ -93,13 +81,15 @@
             <artifactId>mysql-connector-j</artifactId>
             <scope>runtime</scope>
         </dependency>
-
         <!-- Flyway -->
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-mysql</artifactId>
+        </dependency>
         <!-- MapStruct & Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -112,15 +102,29 @@
             <artifactId>mapstruct</artifactId>
             <version>${mapstruct.version}</version>
         </dependency>
-
         <!-- OpenAPI / Swagger -->
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
             <version>${springdoc-openapi.version}</version>
         </dependency>
-
-        <!-- Apache Utilities -->
+        <!-- Eureka Client -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+            <version>${spring-cloud-starter.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.httpcomponents</groupId>
+                    <artifactId>httpclient</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>commons-lang</groupId>
+                    <artifactId>commons-lang</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!-- Resolve Vulnerabilidades -->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
@@ -131,27 +135,11 @@
             <artifactId>httpclient5</artifactId>
             <version>${httpclient5.version}</version>
         </dependency>
-
-        <!-- Configuration Processor -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-configuration-processor</artifactId>
-            <optional>true</optional>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-core</artifactId>
+            <version>1.5.19</version>
         </dependency>
-
-        <!-- Spring Cloud / Eureka -->
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
-            <version>${spring-cloud-starter.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.httpcomponents</groupId>
-                    <artifactId>httpclient</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
         <dependency>
             <groupId>com.thoughtworks.xstream</groupId>
             <artifactId>xstream</artifactId>
@@ -162,46 +150,24 @@
             <artifactId>guava</artifactId>
             <version>33.5.0-jre</version>
         </dependency>
-        <!--
-            spring-cloud-starter.version: 4.3.0
-
-            Provides transitive vulnerable dependency maven:org.apache.httpcomponents:httpclient 4.5.3
-            Vulnerability found in dependency:
-            CVE-2020-13956  5.3     Transitive Cross-Site Scripting (XSS)
-
-            thoughtworks xstream
-            Vulnerability found in dependency:
-            Provides transitive vulnerable dependency maven:com.thoughtworks.xstream:xstream:1.4.20
-            Deserialization of Untrusted Data
-            CVE-2024-47072  7.5     Transitive Deserialization of Untrusted Data
-
-            Google Guava
-            Provides transitive vulnerable dependency maven:com.google.guava:guava:14.0.1
-            Tag name: dependencies
-            Description : This element describes all of the dependencies associated with a project.
-            These dependencies are used to construct a classpath for your project during the build process.
-            They are automatically downloaded from the repositories defined in this project.
-            See the dependency mechanism for more information.
-            Version : 3.0.0+
-            3 vulnerabilities found in dependency:
-            CVE-2018-10237  5.9     Transitive Allocation of Resources Without Limits or Throttling
-            CVE-2023-2976   5.5     Transitive Files or Directories Accessible to External Parties
-            CVE-2020-8908   3.3     Transitive Incorrect Permission Assignment for Critical Resource
-        -->
-
         <!-- Logging JSON (Logstash) -->
         <dependency>
             <groupId>net.logstash.logback</groupId>
             <artifactId>logstash-logback-encoder</artifactId>
             <version>8.1</version>
         </dependency>
-
         <!-- DevTools -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
             <scope>runtime</scope>
             <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>com.taptrack.library</groupId>
+            <artifactId>exceptions</artifactId>
+            <version>1.0.0</version>
         </dependency>
 
         <!-- Test -->
